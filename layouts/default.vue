@@ -28,8 +28,8 @@ watch(
 )
 
 const navLinks = [
-  { to: '/', label: 'Player' },
-  { to: '/form', label: 'Create snippet' },
+  { to: '/', label: 'Create snippet' },
+  { to: '/play', label: 'Player' },
   { to: '/saved', label: 'Saved snippets' },
 ]
 </script>

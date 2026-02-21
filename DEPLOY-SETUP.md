@@ -6,15 +6,17 @@ Use this checklist with your actual values. **Do not commit AWS keys or GitHub t
 
 ## Your values (copy these where needed)
 
-| What | Value |
-|------|--------|
-| **Domain** | `davidwellsthedeveloper.com` |
-| **Subdomain (live site)** | `snippets.davidwellsthedeveloper.com` |
-| **GitHub username** | `DavidWellsTheDeveloper` |
-| **GitHub repo** | `https://github.com/DavidWellsTheDeveloper/audio-snippet-player` |
+
+| What                         | Value                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Domain**                   | `davidwellsthedeveloper.com`                                                                           |
+| **Subdomain (live site)**    | `snippets.davidwellsthedeveloper.com`                                                                  |
+| **GitHub username**          | `DavidWellsTheDeveloper`                                                                               |
+| **GitHub repo**              | `https://github.com/DavidWellsTheDeveloper/audio-snippet-player`                                       |
 | **Suggested S3 bucket name** | `snippets-davidwellsthedeveloper-com` (must be globally unique; try this or add a suffix like `-prod`) |
-| **ACM certificate domain** | `snippets.davidwellsthedeveloper.com` |
-| **Route 53 record name** | `snippets` (in hosted zone for `davidwellsthedeveloper.com`) |
+| **ACM certificate domain**   | `snippets.davidwellsthedeveloper.com`                                                                  |
+| **Route 53 record name**     | `snippets` (in hosted zone for `davidwellsthedeveloper.com`)                                           |
+
 
 ---
 
@@ -96,9 +98,9 @@ Repo → **Settings** → **Secrets and variables** → **Actions**:
 
 1. **Route 53** → **Hosted zones** → **davidwellsthedeveloper.com**.
 2. **Create record**:
-   - Name: **snippets**
-   - Type: **A**
-   - Alias: **On** → **Alias to CloudFront distribution** → select your distribution.
+  - Name: **snippets**
+  - Type: **A**
+  - Alias: **On** → **Alias to CloudFront distribution** → select your distribution.
 3. Create record.
 
 ### E. IAM user for GitHub Actions
@@ -127,8 +129,8 @@ Repo → **Settings** → **Secrets and variables** → **Actions**:
 }
 ```
 
-3. Attach policy to the user. **Create access key** → use case “Application running outside AWS”.
-4. Copy **Access key ID** and **Secret access key** → add as GitHub Secrets (see above). You cannot view the secret again.
+1. Attach policy to the user. **Create access key** → use case “Application running outside AWS”.
+2. Copy **Access key ID** and **Secret access key** → add as GitHub Secrets (see above). You cannot view the secret again.
 
 ---
 
@@ -137,4 +139,4 @@ Repo → **Settings** → **Secrets and variables** → **Actions**:
 1. Ensure GitHub **Secrets** and **Variables** are set.
 2. Push to **master** (or re-run the “Deploy to AWS” workflow from the **Actions** tab).
 
-After the workflow succeeds, the site is at **https://snippets.davidwellsthedeveloper.com**.
+After the workflow succeeds, the site is at **[https://snippets.davidwellsthedeveloper.com](https://snippets.davidwellsthedeveloper.com)**.

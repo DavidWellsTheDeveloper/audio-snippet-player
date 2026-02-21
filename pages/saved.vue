@@ -42,7 +42,7 @@ onMounted(load)
       <template v-else-if="snippets.length === 0">
         <p class="text-body2 text-medium-emphasis">No saved snippets yet.</p>
         <p class="text-caption mt-1">
-          <NuxtLink to="/form">Create a snippet</NuxtLink> or open the <NuxtLink to="/">player</NuxtLink> with a URL and save it there.
+          <NuxtLink to="/">Create a snippet</NuxtLink> or open the <NuxtLink to="/play">player</NuxtLink> with a URL and save it there.
         </p>
       </template>
       <v-list v-else>

@@ -4,10 +4,10 @@ Play a time range (snippet) of audio from a URL or YouTube. Built with Nuxt 3, V
 
 ## Features
 
-- **Player** (`/`): Play a snippet from URL params `url`, `start` (seconds), `end` (seconds). Optional `hideVideo=1` for YouTube (audio only, with play/pause buttons).
+- **Create snippet** (`/`): Home page. Form to paste URL, set start/end, toggle hide video, then open the player or save the snippet.
+- **Player** (`/play`): Play a snippet from URL params `url`, `start` (seconds), `end` (seconds). Optional `hideVideo=1` for YouTube (audio only, with play/pause buttons).
 - **YouTube**: Official embed with `start` and `end`; starts paused, stops at end. High-quality audio supported.
 - **Direct audio**: HTML5 `<audio>` with snippet logic; optional Nitro proxy when run with a server if CORS blocks playback.
-- **Create snippet** (`/form`): Form to paste URL, set start/end, toggle hide video, then open the player or save the snippet.
 - **Saved snippets** (`/saved`): List of snippets saved in the browser (IndexedDB). Name, date saved, and player URL. Click to open in a new tab; delete as needed.
 - **UI**: Teal theme (light/dark), top nav, footer, mobile drawer, responsive layout.
 
@@ -20,9 +20,9 @@ Play a time range (snippet) of audio from a URL or YouTube. Built with Nuxt 3, V
 | `end`      | End time in seconds            |
 | `hideVideo`| Optional; `1` = hide YouTube video (audio only) |
 
-**Example (YouTube):** `/?url=https://www.youtube.com/watch?v=VIDEO_ID&start=30&end=90`  
-**Example (YouTube, audio only):** `/?url=https://www.youtube.com/watch?v=VIDEO_ID&start=30&end=90&hideVideo=1`  
-**Example (direct):** `/?url=https://example.com/track.mp3&start=0&end=60`
+**Example (YouTube):** `/play?url=https://www.youtube.com/watch?v=VIDEO_ID&start=30&end=90`  
+**Example (YouTube, audio only):** `/play?url=https://www.youtube.com/watch?v=VIDEO_ID&start=30&end=90&hideVideo=1`  
+**Example (direct):** `/play?url=https://example.com/track.mp3&start=0&end=60`
 
 ## Static deploy
 
