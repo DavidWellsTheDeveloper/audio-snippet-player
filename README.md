@@ -1,14 +1,32 @@
 # Audio Snippet Player
 
-Play a time range (snippet) of audio from a URL or YouTube. Uses URL parameters: `url`, `start` (seconds), `end` (seconds).
+Play a time range (snippet) of audio from a URL or YouTube. Built with Nuxt 3, Vuetify, and TypeScript.
 
-- **YouTube**: Use any YouTube watch or embed URL; playback uses the official embed with `start` and `end` (starts paused, stops at end).
-- **Direct audio**: Use a direct link to an audio file (e.g. `.mp3`). Some hosts block cross-origin playback; if playback fails, the app will try the proxy when run with a server.
+## Features
+
+- **Player** (`/`): Play a snippet from URL params `url`, `start` (seconds), `end` (seconds). Optional `hideVideo=1` for YouTube (audio only, with play/pause buttons).
+- **YouTube**: Official embed with `start` and `end`; starts paused, stops at end. High-quality audio supported.
+- **Direct audio**: HTML5 `<audio>` with snippet logic; optional Nitro proxy when run with a server if CORS blocks playback.
+- **Create snippet** (`/form`): Form to paste URL, set start/end, toggle hide video, then open the player or save the snippet.
+- **Saved snippets** (`/saved`): List of snippets saved in the browser (IndexedDB). Name, date saved, and player URL. Click to open in a new tab; delete as needed.
+- **UI**: Teal theme (light/dark), top nav, footer, mobile drawer, responsive layout.
+
+## URL parameters
+
+| Param      | Description                    |
+| ---------- | ------------------------------ |
+| `url`      | YouTube or direct audio URL    |
+| `start`    | Start time in seconds          |
+| `end`      | End time in seconds            |
+| `hideVideo`| Optional; `1` = hide YouTube video (audio only) |
 
 **Example (YouTube):** `/?url=https://www.youtube.com/watch?v=VIDEO_ID&start=30&end=90`  
+**Example (YouTube, audio only):** `/?url=https://www.youtube.com/watch?v=VIDEO_ID&start=30&end=90&hideVideo=1`  
 **Example (direct):** `/?url=https://example.com/track.mp3&start=0&end=60`
 
-**Static deploy:** Run `npm run generate` and deploy `.output/public` to any static host. YouTube and CORS-friendly direct URLs work. For direct URLs that block CORS, run the app with a server (e.g. `npm run dev` or `node .output/server/index.mjs`) so the `/api/proxy` route is available.
+## Static deploy
+
+Run `npm run generate` and deploy `.output/public` to any static host. YouTube and CORS-friendly direct URLs work without a server. For direct URLs that block CORS, run the app with a server so the `/api/proxy` route is available.
 
 ## Setup
 
@@ -48,7 +66,7 @@ bun run dev
 
 ## Production
 
-Build the application for production:
+Build the application for production (SSR):
 
 ```bash
 # npm
@@ -64,7 +82,23 @@ yarn build
 bun run build
 ```
 
-Locally preview production build:
+Generate a static site (for S3/CloudFront or any static host):
+
+```bash
+# npm
+npm run generate
+
+# pnpm
+pnpm generate
+
+# yarn
+yarn generate
+
+# bun
+bun run generate
+```
+
+Output is in `.output/public`. Locally preview a production build:
 
 ```bash
 # npm
