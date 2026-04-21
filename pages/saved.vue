@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useSnippetsDb } from '~/composables/useSnippetsDb'
 import type { SavedSnippet } from '~/composables/useSnippetsDb'
+import { ROUTES } from '~/constants/snippet'
 
 const { getAllSnippets, deleteSnippet } = useSnippetsDb()
 const snippets = ref<SavedSnippet[]>([])
@@ -42,7 +43,7 @@ onMounted(load)
       <template v-else-if="snippets.length === 0">
         <p class="text-body2 text-medium-emphasis">No saved snippets yet.</p>
         <p class="text-caption mt-1">
-          <NuxtLink to="/">Create a snippet</NuxtLink> or open the <NuxtLink to="/play">player</NuxtLink> with a URL and save it there.
+          <NuxtLink :to="ROUTES.create">Create a snippet</NuxtLink> or open the <NuxtLink :to="ROUTES.play">player</NuxtLink> with a URL and save it there.
         </p>
       </template>
       <v-list v-else>

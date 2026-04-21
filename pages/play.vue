@@ -1,82 +1,38 @@
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSnippetParams } from '~/composables/useSnippetParams'
-import { useSnippetsDb } from '~/composables/useSnippetsDb'
-import { computed, ref, watch, onMounted, nextTick } from 'vue'
+import { useSnippetSave } from '~/composables/useSnippetSave'
+import { useYoutubeIframePlayer } from '~/composables/useYoutubeIframePlayer'
+import { buildAudioProxyUrl, QUERY_KEYS, YT_HIDDEN_PLAYER_SIZE_PX } from '~/constants/snippet'
 
+const ytHiddenPlayerPx = YT_HIDDEN_PLAYER_SIZE_PX
 const route = useRoute()
-const { saveSnippet } = useSnippetsDb()
-const saveName = ref('')
-const saveMessage = ref('')
+const { saveMessage, saveName, trySave } = useSnippetSave()
 const params = computed(() =>
   useSnippetParams({
-    url: route.query.url,
-    start: route.query.start,
-    end: route.query.end,
-    hideVideo: route.query.hideVideo,
-  })
+    [QUERY_KEYS.end]: route.query[QUERY_KEYS.end],
+    [QUERY_KEYS.hideVideo]: route.query[QUERY_KEYS.hideVideo],
+    [QUERY_KEYS.start]: route.query[QUERY_KEYS.start],
+    [QUERY_KEYS.url]: route.query[QUERY_KEYS.url],
+  }),
 )
+
+const { containerId, pause: pauseYt, play: playYt } = useYoutubeIframePlayer(params)
 
 const audioRef = ref<HTMLAudioElement | null>(null)
 const useProxy = ref(false)
 
-const YT_PLAYER_CONTAINER_ID = 'yt-player-hidden'
-interface YTPlayer {
-  playVideo?: () => void
-  pauseVideo?: () => void
-}
-const ytPlayerRef = ref<YTPlayer | null>(null)
-
-function initYtPlayer() {
-  const p = params.value
-  if (!p.videoId || !document.getElementById(YT_PLAYER_CONTAINER_ID)) return
-  const YT = (window as unknown as { YT?: { Player: new (id: string, opts: Record<string, unknown>) => YTPlayer } }).YT
-  if (!YT?.Player) return
-  ytPlayerRef.value = new YT.Player(YT_PLAYER_CONTAINER_ID, {
-    width: 200,
-    height: 200,
-    videoId: p.videoId,
-    playerVars: {
-      start: Math.floor(p.start),
-      end: Math.floor(p.end),
-    },
-    events: {
-      onReady(event: { target: YTPlayer }) {
-        ytPlayerRef.value = event.target
-      },
-    },
-  })
-}
-
-onMounted(() => {
-  if (!params.value.hideVideo || !params.value.isYouTube || !params.value.videoId) return
-  nextTick(() => {
-    const w = window as unknown as { YT?: { Player: new (id: string, opts: Record<string, unknown>) => YTPlayer }; onYouTubeIframeAPIReady?: () => void }
-    if (w.YT?.Player) {
-      initYtPlayer()
-    } else {
-      w.onYouTubeIframeAPIReady = () => initYtPlayer()
-      const script = document.createElement('script')
-      script.src = 'https://www.youtube.com/iframe_api'
-      document.head.appendChild(script)
-    }
-  })
-})
-
-function playYt() {
-  ytPlayerRef.value?.playVideo?.()
-}
-
-function pauseYt() {
-  ytPlayerRef.value?.pauseVideo?.()
-}
-
 const effectiveAudioUrl = computed(() => {
   const p = params.value
-  if (!p.valid || p.isYouTube || !p.audioUrl) return ''
-  if (useProxy.value) {
-    return `/api/proxy?url=${encodeURIComponent(p.audioUrl)}`
+  if (!p.valid || p.isYouTube || !p.audioUrl) {
+    return ''
   }
+
+  if (useProxy.value) {
+    return buildAudioProxyUrl(p.audioUrl)
+  }
+
   return p.audioUrl
 })
 
@@ -84,7 +40,7 @@ watch(
   () => [params.value.valid, params.value.url],
   () => {
     useProxy.value = false
-  }
+  },
 )
 
 function onAudioError() {
@@ -97,7 +53,10 @@ function onAudioError() {
 function onLoadedMetadata() {
   const el = audioRef.value
   const p = params.value
-  if (!el || !p.valid || p.isYouTube) return
+  if (!el || !p.valid || p.isYouTube) {
+    return
+  }
+
   el.currentTime = p.start
   el.pause()
 }
@@ -105,26 +64,21 @@ function onLoadedMetadata() {
 function onTimeUpdate() {
   const el = audioRef.value
   const p = params.value
-  if (!el || !p.valid || p.isYouTube) return
+  if (!el || !p.valid || p.isYouTube) {
+    return
+  }
+
   if (el.currentTime >= p.end) {
     el.pause()
     el.currentTime = p.end
   }
 }
 
-async function onSaveSnippet() {
-  if (typeof window === 'undefined' || !params.value.valid) return
-  const name = saveName.value.trim()
-  if (!name) return
-  const playerUrl = window.location.origin + route.fullPath
-  try {
-    await saveSnippet({ name, playerUrl })
-    saveName.value = ''
-    saveMessage.value = 'Snippet saved.'
-    setTimeout(() => { saveMessage.value = '' }, 3000)
-  } catch (e) {
-    saveMessage.value = 'Failed to save.'
-  }
+function onSaveSnippet() {
+  return trySave(
+    () => window.location.origin + route.fullPath,
+    () => params.value.valid,
+  )
 }
 </script>
 
@@ -168,7 +122,7 @@ async function onSaveSnippet() {
               <v-btn variant="outlined" @click="pauseYt">Pause</v-btn>
             </div>
             <div class="youtube-embed__player-wrapper">
-              <div :id="YT_PLAYER_CONTAINER_ID" class="youtube-embed__player--hidden" />
+              <div :id="containerId" class="youtube-embed__player--hidden" />
             </div>
           </template>
           <iframe
@@ -205,25 +159,13 @@ async function onSaveSnippet() {
         </p>
       </template>
 
-      <template v-if="params.valid">
-        <v-divider class="my-4" />
-        <p class="text-body2 font-weight-medium mb-2">Save snippet</p>
-        <div class="d-flex align-center gap-2 flex-wrap">
-          <v-text-field
-            v-model="saveName"
-            label="Name"
-            placeholder="My snippet"
-            variant="outlined"
-            density="compact"
-            hide-details
-            class="flex-grow-1"
-            style="max-width: 200px"
-            @keydown.enter.prevent="onSaveSnippet"
-          />
-          <v-btn size="small" color="primary" @click="onSaveSnippet">Save</v-btn>
-        </div>
-        <p v-if="saveMessage" class="text-caption text-medium-emphasis mt-1">{{ saveMessage }}</p>
-      </template>
+      <SaveSnippetForm
+        v-if="params.valid"
+        v-model="saveName"
+        message-class="mt-1"
+        :message="saveMessage"
+        @save="onSaveSnippet"
+      />
     </v-card-text>
   </v-card>
 </template>
@@ -252,8 +194,8 @@ async function onSaveSnippet() {
   position: absolute;
   left: 0;
   top: 0;
-  width: 200px !important;
-  height: 200px !important;
+  width: calc(v-bind('ytHiddenPlayerPx') * 1px) !important;
+  height: calc(v-bind('ytHiddenPlayerPx') * 1px) !important;
 }
 code {
   font-size: 0.85em;
