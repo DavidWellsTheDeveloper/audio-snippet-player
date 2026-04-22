@@ -70,5 +70,5 @@ export function useSnippetsDb() {
     })
   }
 
-  return { saveSnippet, getAllSnippets, deleteSnippet }
+  return { deleteSnippet, getAllSnippets, saveSnippet }
 }

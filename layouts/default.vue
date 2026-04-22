@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { useTheme, useDisplay } from 'vuetify'
-import { ref, watch, onMounted } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { useDisplay, useTheme } from 'vuetify'
+import { TRIVIA_ROUTES } from '~/constants/trivia'
+import { ROUTES } from '~/constants/snippet'
 
 const theme = useTheme()
 const { mobile } = useDisplay()
@@ -28,9 +30,10 @@ watch(
 )
 
 const navLinks = [
-  { to: '/', label: 'Create snippet' },
-  { to: '/play', label: 'Player' },
-  { to: '/saved', label: 'Saved snippets' },
+  { label: 'Create snippet', to: ROUTES.create },
+  { label: 'Player', to: ROUTES.play },
+  { label: 'Saved snippets', to: ROUTES.saved },
+  { label: 'Trivia', to: TRIVIA_ROUTES.home },
 ]
 </script>
 
@@ -42,7 +45,7 @@ const navLinks = [
         aria-label="Open menu"
         @click="drawer = true"
       />
-      <NuxtLink to="/" class="text-body1 font-weight-medium text-white text-decoration-none mr-4">
+      <NuxtLink :to="ROUTES.create" class="text-body1 font-weight-medium text-white text-decoration-none mr-4">
         Audio Snippet Player
       </NuxtLink>
       <template v-if="!mobile">

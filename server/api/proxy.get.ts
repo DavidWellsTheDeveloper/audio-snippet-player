@@ -1,4 +1,5 @@
-import { getQuery, setResponseStatus, setResponseHeader, sendStream } from 'h3'
+import { getQuery, setResponseHeader, setResponseStatus, sendStream } from 'h3'
+import { QUERY_KEYS } from '~/constants/snippet'
 
 /**
  * Stream a remote URL to the client (CORS proxy for direct audio).
@@ -7,7 +8,7 @@ import { getQuery, setResponseStatus, setResponseHeader, sendStream } from 'h3'
  */
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const url = query.url
+  const url = query[QUERY_KEYS.url]
   const targetUrl = typeof url === 'string' ? url : Array.isArray(url) ? url[0] : null
 
   if (!targetUrl) {

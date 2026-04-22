@@ -1,31 +1,56 @@
-import { normalizeUrl, isYouTubeUrl, getYouTubeVideoId, getYouTubeEmbedUrl } from '~/utils/youtube'
+import { QUERY_KEYS } from '~/constants/snippet'
+import {
+  getYouTubeEmbedUrl,
+  getYouTubeVideoId,
+  isYouTubeUrl,
+  normalizeUrl,
+} from '~/utils/youtube'
 
 export interface SnippetParams {
-  url: string
-  start: number
   end: number
+  start: number
+  url: string
 }
 
 export interface SnippetParamsResult {
-  valid: boolean
-  url: string
-  start: number
-  end: number
-  isYouTube: boolean
-  /** YouTube video ID when isYouTube (for IFrame API). */
-  videoId: string | null
-  embedUrl: string | null
   audioUrl: string | null
-  /** When true, hide the YouTube video (audio-only; embed still plays, just not visible). */
-  hideVideo: boolean
+  embedUrl: string | null
+  end: number
   error?: string
+  hideVideo: boolean
+  isYouTube: boolean
+  start: number
+  url: string
+  valid: boolean
+  videoId: string | null
+}
+
+function invalid(overrides: Partial<SnippetParamsResult> & Pick<SnippetParamsResult, 'valid'>): SnippetParamsResult {
+  return {
+    audioUrl: null,
+    embedUrl: null,
+    end: 0,
+    hideVideo: false,
+    isYouTube: false,
+    start: 0,
+    url: '',
+    videoId: null,
+    ...overrides,
+  }
 }
 
 function parseHideVideo(value: string | string[] | undefined): boolean {
-  if (value === undefined) return false
+  if (value === undefined) {
+    return false
+  }
+
   const v = Array.isArray(value) ? value[0] : value
-  if (v === undefined) return false
+  if (v === undefined) {
+    return false
+  }
+
   const s = String(v).toLowerCase()
+
   return s === '1' || s === 'true' || s === 'yes'
 }
 
@@ -35,103 +60,97 @@ function parseHideVideo(value: string | string[] | undefined): boolean {
  * Optional: hideVideo=1 to hide the YouTube video (audio-only).
  */
 export function useSnippetParams(query: {
-  url?: string | string[]
-  start?: string | string[]
-  end?: string | string[]
-  hideVideo?: string | string[]
+  [QUERY_KEYS.end]?: string | string[]
+  [QUERY_KEYS.hideVideo]?: string | string[]
+  [QUERY_KEYS.start]?: string | string[]
+  [QUERY_KEYS.url]?: string | string[]
 }): SnippetParamsResult {
-  const url = Array.isArray(query.url) ? query.url[0] : query.url
-  const startRaw = Array.isArray(query.start) ? query.start[0] : query.start
-  const endRaw = Array.isArray(query.end) ? query.end[0] : query.end
-  const hideVideo = parseHideVideo(query.hideVideo)
+  const urlRaw = Array.isArray(query[QUERY_KEYS.url]) ? query[QUERY_KEYS.url][0] : query[QUERY_KEYS.url]
+  const startRaw = Array.isArray(query[QUERY_KEYS.start]) ? query[QUERY_KEYS.start][0] : query[QUERY_KEYS.start]
+  const endRaw = Array.isArray(query[QUERY_KEYS.end]) ? query[QUERY_KEYS.end][0] : query[QUERY_KEYS.end]
+  const hideVideo = parseHideVideo(query[QUERY_KEYS.hideVideo])
 
   const start = startRaw != null ? Number(startRaw) : NaN
   const end = endRaw != null ? Number(endRaw) : NaN
 
-  if (!url || typeof url !== 'string' || url.trim() === '') {
-    return {
-      valid: false,
-      url: '',
-      start: 0,
-      end: 0,
-      isYouTube: false,
-      videoId: null,
-      embedUrl: null,
-      audioUrl: null,
-      hideVideo: false,
+  if (!urlRaw || typeof urlRaw !== 'string' || urlRaw.trim() === '') {
+    return invalid({
       error: 'Missing url parameter',
-    }
+      valid: false,
+    })
   }
 
-  const trimmedUrl = normalizeUrl(url.trim())
+  const trimmedUrl = normalizeUrl(urlRaw.trim())
   if (start < 0 || !Number.isFinite(start)) {
-    return {
-      valid: false,
-      url: trimmedUrl,
-      start: 0,
+    return invalid({
+      audioUrl: null,
+      embedUrl: null,
       end: 0,
-      isYouTube: isYouTubeUrl(trimmedUrl),
-      videoId: null,
-      embedUrl: null,
-      audioUrl: null,
-      hideVideo,
       error: 'Invalid or missing start time (seconds)',
-    }
-  }
-  if (end <= start || !Number.isFinite(end)) {
-    return {
-      valid: false,
-      url: trimmedUrl,
-      start,
-      end,
-      isYouTube: isYouTubeUrl(trimmedUrl),
-      videoId: null,
-      embedUrl: null,
-      audioUrl: null,
       hideVideo,
+      isYouTube: isYouTubeUrl(trimmedUrl),
+      start: 0,
+      url: trimmedUrl,
+      valid: false,
+      videoId: null,
+    })
+  }
+
+  if (end <= start || !Number.isFinite(end)) {
+    return invalid({
+      audioUrl: null,
+      embedUrl: null,
+      end,
       error: 'Invalid or missing end time (must be > start, in seconds)',
-    }
+      hideVideo,
+      isYouTube: isYouTubeUrl(trimmedUrl),
+      start,
+      url: trimmedUrl,
+      valid: false,
+      videoId: null,
+    })
   }
 
   const isYouTube = isYouTubeUrl(trimmedUrl)
   if (isYouTube) {
     const videoId = getYouTubeVideoId(trimmedUrl)
     if (!videoId) {
-      return {
-        valid: false,
-        url: trimmedUrl,
-        start,
-        end,
-        isYouTube: true,
-        videoId: null,
-        embedUrl: null,
+      return invalid({
         audioUrl: null,
-        hideVideo,
+        embedUrl: null,
+        end,
         error: 'Could not parse YouTube video ID',
-      }
+        hideVideo,
+        isYouTube: true,
+        start,
+        url: trimmedUrl,
+        valid: false,
+        videoId: null,
+      })
     }
+
     return {
-      valid: true,
-      url: trimmedUrl,
-      start,
-      end,
-      isYouTube: true,
-      videoId,
-      embedUrl: getYouTubeEmbedUrl(videoId, start, end),
       audioUrl: null,
+      embedUrl: getYouTubeEmbedUrl(videoId, start, end),
+      end,
       hideVideo,
+      isYouTube: true,
+      start,
+      url: trimmedUrl,
+      valid: true,
+      videoId,
     }
   }
 
   return {
-    valid: true,
-    url: trimmedUrl,
-    start,
-    end,
-    isYouTube: false,
-    videoId: null,
-    embedUrl: null,
     audioUrl: trimmedUrl,
+    embedUrl: null,
+    end,
     hideVideo: false,
+    isYouTube: false,
+    start,
+    url: trimmedUrl,
+    valid: true,
+    videoId: null,
   }
 }
